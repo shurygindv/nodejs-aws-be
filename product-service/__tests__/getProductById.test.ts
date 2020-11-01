@@ -26,7 +26,7 @@ describe("getProductById.test", () => {
 
     return wrapped
       .run({
-        queryStringParameters: params,
+        pathParameters: params,
       })
       .then((response) => {
         const body = JSON.parse(response.body);

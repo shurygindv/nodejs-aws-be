@@ -1,4 +1,4 @@
-service: rsscool-product-service
+service: rsschool-product-service
 
 provider:
   name: aws

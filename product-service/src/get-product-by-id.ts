@@ -14,16 +14,24 @@ export const getProductById: APIGatewayProxyHandler = async (
   event,
   _context
 ) => {
-  const params = event.queryStringParameters || {};
+  const params = event.pathParameters || {};
+
+  console.info(event);
 
   if (isInvalidParams(params)) {
     return httpResponse.failure({ name: "validation error" });
   }
 
-  try {
-    const product = await productDb.selectProductById(params["productId"]);
+  const productId = params["productId"];
 
-    console.info(product);
+  try {
+    const product = await productDb.selectProductById(productId);
+
+    if (!product) {
+      return httpResponse.failure({
+        name: `Product not found by id: ${productId}`,
+      });
+    }
 
     return httpResponse.success({ data: product || null });
   } catch (e) {
