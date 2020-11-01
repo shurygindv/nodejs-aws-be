@@ -1,0 +1,43 @@
+service: rsscool-product-service
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-1
+  timeout: 10
+  memorySize: 256
+  apiGateway:
+    minimumCompressionSize: 1024
+  logs:
+    restApi: true
+
+plugins:
+  - serverless-jest-plugin
+  - serverless-webpack
+
+
+custom:
+  jest:
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    includeModules: true
+
+functions:
+  getAllProducts:
+    handler: handler.getAllProducts
+    events:
+      - http:
+          path: products
+          method: get
+  
+  getProductById:
+    handler: handler.getProductById
+    events:
+      - http:
+          path: products/{productId}
+          method: get
+          request: 
+            parameters: 
+              paths: 
+                productId: true
