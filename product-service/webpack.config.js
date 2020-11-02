@@ -23,10 +23,9 @@ module.exports = {
   externals: [nodeExternals()],
   module: {
     rules: [
-      // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
       {
         test: /\.(tsx?)$/,
-        loader: 'ts-loader',
+        loader: 'babel-loader',
         exclude: [
           [
             path.resolve(__dirname, 'node_modules'),
@@ -34,10 +33,6 @@ module.exports = {
             path.resolve(__dirname, '.webpack'),
           ],
         ],
-        options: {
-          transpileOnly: true,
-          experimentalWatchApi: true,
-        },
       },
     ],
   },

@@ -33,12 +33,10 @@ const products = [
   },
 ];
 
-const selectAllProducts = () => {
-  return Promise.resolve(products);
-};
+const selectAllProducts = async () => [...products];
 
-const selectProductById = (id: string) => {
-  return Promise.resolve(products.find((i) => i.id === id) || null);
+const selectProductById = async (id: string) => {
+  return products.find((i) => i.id === id) || null;
 };
 
 export const productDb = {
