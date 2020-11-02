@@ -7,7 +7,7 @@ info:
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: "2lpu8p8ewe.execute-api.eu-west-1.amazonaws.com"
+host: "7d9p5khj1a.execute-api.eu-west-1.amazonaws.com"
 basePath: "/"
 tags:
 - name: "products"
@@ -89,6 +89,9 @@ definitions:
       title:
         type: "string"
         description: "product title"
+      imageName:
+        type: "string"
+        description: "image name"
       description:
         type: "string"
         description: "product description" 

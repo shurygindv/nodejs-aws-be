@@ -1,4 +1,4 @@
-service: rsscool-product-service
+service: rsschool-aws-product-service
 
 provider:
   name: aws
@@ -9,6 +9,9 @@ provider:
   memorySize: 256
   apiGateway:
     minimumCompressionSize: 1024
+    binaryMediaTypes:
+      - '*/*'
+      - 'image/jpeg'
   logs:
     restApi: true
 
@@ -22,8 +25,17 @@ custom:
   webpack:
     webpackConfig: 'webpack.config.js'
     includeModules: true
+    keepOutputDirectory: true
+    packager: 'npm'
 
 functions:
+  getStaticImage:
+    handler: handler.getStaticImage
+    events:
+      - http:
+          path: /static/{file}
+          method: get
+
   getAllProducts:
     handler: handler.getAllProducts
     events:
