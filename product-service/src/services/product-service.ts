@@ -33,13 +33,13 @@ const products = [
   },
 ];
 
-const selectAllProducts = async () => [...products];
+const getAllProducts = async () => [...products];
 
-const selectProductById = async (id: string) => {
+const getProductById = async (id: string) => {
   return products.find((i) => i.id === id) || null;
 };
 
-export const productDb = {
-    selectAllProducts,
-    selectProductById
+export const productService = {
+    getAllProducts,
+    getProductById
 };

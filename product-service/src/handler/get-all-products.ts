@@ -1,15 +1,15 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import "source-map-support/register";
 
-import { productDb } from "./product-db";
-import { httpResponse } from "./libs";
+import { productService } from "../services/product-service";
+import { httpResponse } from "../libs/http";
 
 export const getAllProducts: APIGatewayProxyHandler = async (
   _event,
   _context
 ) => {
   try {
-    const products = await productDb.selectAllProducts();
+    const products = await productService.getAllProducts();
 
     return httpResponse.success({ items: products });
   } catch (e) {

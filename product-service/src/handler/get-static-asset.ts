@@ -1,16 +1,19 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-export const getStaticImage = async (event) => {
+import { validator as v } from '../libs/validator';
+
+// only jpg, png
+export const getStaticAsset = async (event) => {
 	console.info(event);
 
-	const file = (event.pathParameters || {}).file || '';
+	const file = Object(event.pathParameters).file;
 
-	if (file === '') {
-		return { statusCode: 404 };
+	if (v.isImageFileName(file)) {
+		return serveStaticFile(file);
 	}
 
-	return serveStaticFile(file);
+	return { statusCode: 404 };
 };
 
 const mimeTypes = {

@@ -21,7 +21,6 @@ plugins:
 
 
 custom:
-  jest:
   webpack:
     webpackConfig: 'webpack.config.js'
     includeModules: true
@@ -29,8 +28,8 @@ custom:
     packager: 'npm'
 
 functions:
-  getStaticImage:
-    handler: handler.getStaticImage
+  getStaticAsset:
+    handler: handler.getStaticAsset
     events:
       - http:
           path: /static/{file}
