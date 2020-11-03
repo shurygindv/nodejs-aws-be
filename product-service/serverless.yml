@@ -1,0 +1,57 @@
+service: rsschool-aws-product-service
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-1
+  timeout: 10
+  memorySize: 256
+  apiGateway:
+    minimumCompressionSize: 1024
+    binaryMediaTypes:
+      - '*/*'
+      - 'image/jpeg'
+  logs:
+    restApi: true
+
+plugins:
+  - serverless-jest-plugin
+  - serverless-webpack
+
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    includeModules: true
+    keepOutputDirectory: true
+    packager: 'npm'
+
+functions:
+  getStaticAsset:
+    handler: handler.getStaticAsset
+    events:
+      - http:
+          path: /static/{file}
+          method: get
+          cors: true
+
+  getAllProducts:
+    handler: handler.getAllProducts
+    events:
+      - http:
+          path: products
+          method: get
+          cors: true
+  
+  getProductById:
+    handler: handler.getProductById
+    events:
+      - http:
+          path: products/{productId}
+          method: get
+          cors: true
+          request: 
+            parameters: 
+              paths: 
+                productId: true
