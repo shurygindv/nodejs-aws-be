@@ -1,5 +1,4 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import "source-map-support/register";
 
 import { productService } from "../services/product-service";
 import { httpResponse } from "../libs/http";
@@ -19,7 +18,7 @@ export const getProductById: APIGatewayProxyHandler = async (
   console.info(event);
 
   if (isInvalidParams(params)) {
-    return httpResponse.failure({ name: "validation error" });
+    return httpResponse.failureResult({ name: "validation error" });
   }
 
   const productId = params["productId"];
@@ -28,15 +27,15 @@ export const getProductById: APIGatewayProxyHandler = async (
     const product = await productService.getProductById(productId);
 
     if (!product) {
-      return httpResponse.failure({
+      return httpResponse.failureResult({
         name: `Product not found by id: ${productId}`,
       });
     }
 
-    return httpResponse.success({ data: product });
+    return httpResponse.successResult({ data: product });
   } catch (e) {
     console.error(e.message);
 
-    return httpResponse.failure({ name: "Something went wrong" });
+    return httpResponse.failureResult({ name: "Something went wrong" });
   }
 };

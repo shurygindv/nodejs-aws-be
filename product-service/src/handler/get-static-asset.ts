@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 import { validator as v } from '../libs/validator';
+import { httpResponse } from "../libs/http";
 
 // only jpg, png
 export const getStaticAsset = async (event) => {
@@ -13,7 +14,7 @@ export const getStaticAsset = async (event) => {
 		return serveStaticFile(file);
 	}
 
-	return { statusCode: 404 };
+	return httpResponse.fileNotFound();
 };
 
 const mimeTypes = {
@@ -22,33 +23,30 @@ const mimeTypes = {
 };
 
 
+const readAssetFile = (file: string) => fs.readFile(path.resolve(
+	__dirname,
+	'assets/images',
+	file
+));
+
 async function serveStaticFile(file: string) {
 	const ext = path.extname(file);
+	const contentType = mimeTypes.hasOwnProperty(ext) ? mimeTypes[ext] : '';
 
-	const filePath = path.resolve(
-		__dirname,
-		'assets/images',
-		file
-    );
-    
-    console.log(filePath);
+	if (contentType === '') {
+		return httpResponse.fileNotFound();
+	}
 
 	try {
-		const fileContent = await fs.readFile(filePath);
+		const fileContent = await readAssetFile(file);
 
-		return {
-			statusCode: 200,
-			isBase64Encoded: true,
-			body: fileContent.toString('base64'),
-			headers: {
-				'Content-Type': mimeTypes[ext],
-			},
-		};
+		return httpResponse.lambdaFile({
+			fileContent: fileContent,
+			contentType
+		});
 	} catch (error) {
 		console.error(error);
-		return {
-			statusCode: 404,
-		};
+		return httpResponse.fileNotFound();
 	}
 }
 
