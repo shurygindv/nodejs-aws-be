@@ -5,7 +5,7 @@ import { validator as v } from '../libs/validator';
 import { httpResponse } from "../libs/http";
 
 // only jpg, png
-export const getStaticAsset = async (event) => {
+export const serveStaticAsset = async (event) => {
 	console.info(event);
 
 	const file = Object(event.pathParameters).file;

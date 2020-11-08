@@ -1,6 +1,7 @@
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Credentials": true,
+  "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 };
 
 enum HttpResult {
@@ -31,16 +32,16 @@ const successResult = <T>(result: T) => success({ result });
 
 const failure = <T>(payload: {
   statusCode?: number;
-  result: HttpResult;
+  result?: HttpResult;
   error: T;
 }) =>
   res({
-    statusCode: payload.statusCode || 400,
+    statusCode: payload.statusCode || 500,
     headers: {
       ...cors,
     },
     body: {
-      code: payload.result,
+      code: payload.result || HttpResult.fail,
       error: payload.error,
     },
   });
@@ -48,7 +49,7 @@ const failure = <T>(payload: {
 const failureResult = <T>(result: T) =>
   failure({
     error: result,
-    result: HttpResult.fail,
+    statusCode: 400,
   });
 
 const fileNotFound = <T>(payload?: T) =>
@@ -75,6 +76,9 @@ const lambdaFile = ({
   });
 
 export const httpResponse = {
+  failure,
+  success,
+
   successResult,
   failureResult,
 
