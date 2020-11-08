@@ -17,20 +17,25 @@ provider:
     apiGateway: true
     lambda: true
 
+  environment:
+    PG_HOST: ${env:PG_DB_HOST}
+    PG_PORT: ${env:PG_DB_PORT}
+    PG_DATABASE: ${env:PG_DB_NAME}
+    PG_USERNAME: ${env:PG_DB_USERNAME}
+    PG_PASSWORD: ${env:PG_DB_PASSWORD}
+
 plugins:
   - serverless-jest-plugin
   - serverless-webpack
   - serverless-dotenv-plugin
+  - serverless-offline
+  - serverless-aws-documentation
 #  - serverless-vpc-plugin TODO: later
 
 custom:
   # DB
-  RDS_PG: 
-    DB_NAME: ${env:PG_DB_NAME}
-    DB_MASTER_USERNAME: ${env:PG_DB_USERNAME}
-    DB_MASTER_PASSWORD: ${env:PG_DB_PASSWORD}
-
-    DB_CONSOLE_NAME: db-${self:custom.RDS_PG.DB_NAME}-${opt:stage, self:provider.stage}
+  RDS: 
+    DB_INSTANCE_NAME: db-${self:provider.environment.PG_DATABASE}-${opt:stage, self:provider.stage}
     SUBNET_REGION_A: ${self:provider.region}a
     SUBNET_REGION_B: ${self:provider.region}b
 
@@ -40,14 +45,29 @@ custom:
     keepOutputDirectory: true
     packager: 'npm'
 
+  dotenv:
+    required:
+      file: true
+
 functions:
-  getStaticAsset:
-    handler: handler.getStaticAsset
+  serveStaticAsset:
+    handler: handler.serveStaticAsset
     events:
       - http:
           path: static/{file}
           method: get
           cors: true
+
+  createProduct:
+    handler: handler.createProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
+          request:
+            schema:
+              application/json: ${file(validation/create_product.json)}
 
   getAllProducts:
     handler: handler.getAllProducts
@@ -70,7 +90,7 @@ functions:
                 productId: true
 
 
-# TODO: bastion host
+# TODO: 1. bastion ssh host for db connection
 resources:
   Resources:
     # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc.html
@@ -95,8 +115,8 @@ resources:
         SecurityGroupIngress:
         - IpProtocol: tcp
           CidrIp: 0.0.0.0/0
-          FromPort: 5432
-          ToPort: 5432
+          FromPort: ${self:provider.environment.PG_PORT}
+          ToPort: ${self:provider.environment.PG_PORT}
 
     # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-internetgateway.html
     ServerlessInternetGateway: 
@@ -113,7 +133,7 @@ resources:
       Properties:
         VpcId:
           Ref: ServerlessVPC
-        AvailabilityZone: ${self:custom.RDS_PG.SUBNET_REGION_A}
+        AvailabilityZone: ${self:custom.RDS.SUBNET_REGION_A}
         CidrBlock: 10.0.0.0/24
     ServerlessSubnetB: 
       DependsOn: ServerlessVPC
@@ -121,7 +141,7 @@ resources:
       Properties:
         VpcId:
           Ref: ServerlessVPC
-        AvailabilityZone: ${self:custom.RDS_PG.SUBNET_REGION_B}
+        AvailabilityZone: ${self:custom.RDS.SUBNET_REGION_B}
         CidrBlock: 10.0.1.0/24
 
     # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbsubnet-group.html
@@ -151,13 +171,13 @@ resources:
       DeletionPolicy: Snapshot
       Properties:
         Engine: postgres
-        EngineVersion: "12.3"
+        EngineVersion: "12.4"
         DBInstanceClass: db.t2.micro
-        DBInstanceIdentifier: ${self:custom.RDS_PG.DB_CONSOLE_NAME}
-        DBName: ${self:custom.RDS_PG.DB_NAME}
-        Port: 5432
-        MasterUsername:  ${self:custom.RDS_PG.DB_MASTER_USERNAME}
-        MasterUserPassword:  ${self:custom.RDS_PG.DB_MASTER_PASSWORD}
+        DBInstanceIdentifier: ${self:custom.RDS.DB_INSTANCE_NAME}
+        DBName: ${self:provider.environment.PG_DATABASE}
+        Port: ${self:provider.environment.PG_PORT}
+        MasterUsername:  ${self:provider.environment.PG_USERNAME}
+        MasterUserPassword:  ${self:provider.environment.PG_PASSWORD}
         AllocatedStorage: '20'
         StorageType: gp2
         BackupRetentionPeriod: 7
