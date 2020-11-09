@@ -5,6 +5,7 @@ import Ajv from "ajv";
 const ajv = new Ajv({ allErrors: true, schemaId: "id" });
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-04.json"));
 
+// TODO: return type coercion
 const createProductScheme = {
   $id: "http://json-schema.org/draft-04/schema#",
   $schema: "http://json-schema.org/draft-04/schema#",
@@ -18,22 +19,21 @@ const createProductScheme = {
       type: "string"
     },
     price: {
-      type: "number",
-      minimum: 0,
-      exclusiveMinimum: true,
+      type: "string",
     },
     count: {
-      type: "number",
-      minimum: 0,
-      exclusiveMinimum: true,
+      type: "string",
+    },
+    imageName: {
+      type: "string",
     },
   },
 };
 
 ajv.addSchema(createProductScheme, "createProductScheme");
 
-export const isProductBodyInvalid = <T>(body: T) => {
+export const validateProductBody = <T>(body: T) => {
   const isValid = ajv.validate("createProductScheme", body);
-
-  return !isValid;
+  
+  return [!isValid, ajv.errorsText()] as const;
 };

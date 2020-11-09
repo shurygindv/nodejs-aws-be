@@ -17,7 +17,7 @@ const addProduct = async (p: Product) => {
   const client = await createDatabaseConnection();
 
   const productQuery =
-    'INSERT INTO products ("title", "description", "price") VALUES ($1, $2, $3) RETURNING id';
+    'INSERT INTO products ("title", "description", "price", "imageName") VALUES ($1, $2, $3, $4) RETURNING id';
 
   const stockQuery =
     'INSERT INTO stocks ("productId", "count") VALUES ($1, $2) RETURNING id';
@@ -29,6 +29,7 @@ const addProduct = async (p: Product) => {
       p.title,
       p.description,
       p.price,
+      p.imageName
     ]);
 
     const productId = productResult.rows[0].id;
