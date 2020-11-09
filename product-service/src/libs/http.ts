@@ -65,15 +65,14 @@ const lambdaFile = ({
 }: {
   contentType: string;
   fileContent: Buffer;
-}) =>
-  res({
-    statusCode: 200,
-    isBase64Encoded: true,
-    body: fileContent.toString("base64"),
-    headers: {
-      "Content-Type": contentType,
-    },
-  });
+}) => ({
+  statusCode: 200,
+  isBase64Encoded: true,
+  body: fileContent.toString("base64"),
+  headers: {
+    "Content-Type": contentType,
+  },
+});
 
 export const httpResponse = {
   failure,

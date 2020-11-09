@@ -11,7 +11,7 @@ type Product = {
   imageName?: string;
 };
 
-const SELECT_ALL = `SELECT "id", "title", "description", "price" from products`;
+const SELECT_ALL = `SELECT "id", "title", "description", "price", "imageName" from products`;
 
 const addProduct = async (p: Product) => {
   const client = await createDatabaseConnection();
@@ -90,7 +90,7 @@ const getProductStocks = async (productId: string) => {
     const result = await connection.query(
       `SELECT * FROM products p LEFT JOIN
            stocks s 
-           ON s.productId=$1
+           ON s."productId"=$1
         WHERE p.id=$1`,
       [productId]
     );

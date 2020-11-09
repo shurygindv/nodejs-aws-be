@@ -15,7 +15,8 @@ type Product = {
 };
 
 export const createProduct: APIGatewayProxyHandler = lambda(async (event) => {
-  const body = event.queryStringParameters;
+  const buff = Buffer.from(event.body, 'base64'); // TODO: because event.pathParamters null, queryStringParamters null
+  const body = JSON.parse(buff.toString('UTF-8'));
 
   if (isProductBodyInvalid(body)) {
     return httpResponse.failure({
@@ -24,7 +25,9 @@ export const createProduct: APIGatewayProxyHandler = lambda(async (event) => {
     });
   }
 
-  const result = await productService.addProduct(body);
+  console.log(body);
+
+  const result = await productService.addProduct(body as any);
 
   return httpResponse.successResult(result);
 });

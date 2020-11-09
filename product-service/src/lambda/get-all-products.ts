@@ -7,5 +7,5 @@ import { productService } from "../services/product-service";
 export const getAllProducts: APIGatewayProxyHandler = lambda(async () => {
   const result = await productService.getAllProducts();
 
-  return httpResponse.successResult(result);
+  return httpResponse.successResult({items: result});
 });
