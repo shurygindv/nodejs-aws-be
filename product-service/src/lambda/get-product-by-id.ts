@@ -8,6 +8,13 @@ type Params = {
 
 const isInvalidParams = (p: Params) => !p.hasOwnProperty("productId");
 
+const notProductFoundResponse = (productId: string) => {
+  return httpResponse.failure({
+    statusCode: 404,
+    error: { name: `Product not found by id: ${productId}` },
+  });
+}
+
 export const getProductById = lambda(async (event) => {
   const params = Object(event.pathParameters);
 
@@ -20,9 +27,7 @@ export const getProductById = lambda(async (event) => {
   const product = await productService.getProductById(productId);
 
   if (!product) {
-    return httpResponse.failureResult({
-      name: `Product not found by id: ${productId}`,
-    });
+    return notProductFoundResponse(productId);
   }
 
   return httpResponse.successResult({ data: product });
