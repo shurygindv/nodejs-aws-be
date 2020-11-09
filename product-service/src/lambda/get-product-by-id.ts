@@ -1,12 +1,15 @@
 import { productService } from "../services/product-service";
 import { lambda } from "../libs/lambda";
 import { httpResponse } from "../libs/http";
+import { validator as v } from "../libs/validator";
 
 type Params = {
   productId?: string;
 };
 
-const isInvalidParams = (p: Params) => !p.hasOwnProperty("productId");
+const isInvalidParams = (productId?: string) => {
+  return !v.isGuid(productId);
+}
 
 const notProductFoundResponse = (productId: string) => {
   return httpResponse.failure({
@@ -16,9 +19,9 @@ const notProductFoundResponse = (productId: string) => {
 }
 
 export const getProductById = lambda(async (event) => {
-  const params = Object(event.pathParameters);
+  const params: Params = Object(event.pathParameters);
 
-  if (isInvalidParams(params)) {
+  if (isInvalidParams(params.productId)) {
     return httpResponse.failureResult({ name: "validation error" });
   }
 
