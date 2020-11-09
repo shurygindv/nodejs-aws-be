@@ -35,5 +35,8 @@ export const createProduct: APIGatewayProxyHandler = lambda(async (event) => {
 
   const result = await productService.addProduct(body as any);
 
-  return httpResponse.successResult(result);
+  return httpResponse.success({
+    result,
+    statusCode: 201
+  });
 });

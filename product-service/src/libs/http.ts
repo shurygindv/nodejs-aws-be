@@ -16,9 +16,9 @@ const res = (payload: any) => ({
   body: JSON.stringify(payload.body),
 });
 
-const success = <T>(payload: { result: T }) =>
+const success = <T>(payload: { result: T, statusCode?: number }) =>
   res({
-    statusCode: 200,
+    statusCode: payload.statusCode || 200,
     headers: {
       ...cors,
     },
