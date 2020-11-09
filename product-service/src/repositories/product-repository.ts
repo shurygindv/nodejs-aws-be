@@ -76,7 +76,9 @@ const getProductById = async (id: string) => {
       [id]
     );
 
-    return result.rows;
+    const [one] = result.rows;
+
+    return one;
   } catch (e) {
     throw new Error(`ProductRepo (getAllProducts): can't handle ${e.message}`);
   } finally {

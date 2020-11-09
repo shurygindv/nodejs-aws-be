@@ -2,7 +2,7 @@ import Ajv from "ajv";
 
 // todo: refactor
 
-const ajv = new Ajv({ allErrors: true, schemaId: "id" });
+const ajv = new Ajv({ allErrors: true, schemaId: "id", coerceTypes: true });
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-04.json"));
 
 // TODO: return type coercion
@@ -19,10 +19,14 @@ const createProductScheme = {
       type: "string"
     },
     price: {
-      type: "string",
+      type: "number",
+      minimum: 0,
+      exclusiveMinimum: true,
     },
     count: {
-      type: "string",
+      type: "number",
+      minimum: 0,
+      exclusiveMinimum: true,
     },
     imageName: {
       type: "string",
