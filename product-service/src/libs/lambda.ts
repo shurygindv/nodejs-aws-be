@@ -21,7 +21,10 @@ export const lambda = (fn: Function) => async (
   } catch (e) {
     console.error(e);
 
-    return httpResponse.failureResult({ message: "something went wrong" });
+    return httpResponse.failure({
+      statusCode: 500,
+      error: { message: "something went wrong" }
+    });
   }
 };
 
