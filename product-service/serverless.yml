@@ -8,33 +8,66 @@ provider:
   timeout: 10
   memorySize: 256
   apiGateway:
+    shouldStartNameWithService: true
     minimumCompressionSize: 1024
     binaryMediaTypes:
       - '*/*'
       - 'image/jpeg'
-  logs:
-    restApi: true
+  tracing:
+    apiGateway: true
+    lambda: true
+
+  environment:
+    PG_HOST: ${env:PG_DB_HOST}
+    PG_PORT: ${env:PG_DB_PORT}
+    PG_DATABASE: ${env:PG_DB_NAME}
+    PG_USERNAME: ${env:PG_DB_USERNAME}
+    PG_PASSWORD: ${env:PG_DB_PASSWORD}
 
 plugins:
   - serverless-jest-plugin
   - serverless-webpack
-
+  - serverless-dotenv-plugin
+  - serverless-offline
+  - serverless-aws-documentation
+#  - serverless-vpc-plugin TODO: later
 
 custom:
+  # DB
+  RDS: 
+    DB_INSTANCE_NAME: db-${self:provider.environment.PG_DATABASE}-${opt:stage, self:provider.stage}
+    SUBNET_REGION_A: ${self:provider.region}a
+    SUBNET_REGION_B: ${self:provider.region}b
+
   webpack:
     webpackConfig: 'webpack.config.js'
     includeModules: true
     keepOutputDirectory: true
     packager: 'npm'
 
+  dotenv:
+    required:
+      file: true
+
 functions:
-  getStaticAsset:
-    handler: handler.getStaticAsset
+  serveStaticAsset:
+    handler: handler.serveStaticAsset
     events:
       - http:
-          path: /static/{file}
+          path: static/{file}
           method: get
           cors: true
+
+  createProduct:
+    handler: handler.createProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
+          request:
+            schema:
+              application/json: ${file(validation/create_product.json)}
 
   getAllProducts:
     handler: handler.getAllProducts
@@ -55,3 +88,107 @@ functions:
             parameters: 
               paths: 
                 productId: true
+
+
+# TODO: 1. bastion ssh host for db connection
+resources:
+  Resources:
+    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc.html
+    ServerlessVPC: 
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: 10.0.0.0/16
+        EnableDnsSupport: true
+        EnableDnsHostnames: true
+        InstanceTenancy: default
+
+    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+    ServerlessRDSSecurityGroup:
+      DependsOn: ServerlessVPC
+
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupName: "RSSchool test security group"
+        GroupDescription: "allow all traffic TCP/IP; TODO: limit, trusted"
+        VpcId:
+          Ref: ServerlessVPC
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: ${self:provider.environment.PG_PORT}
+          ToPort: ${self:provider.environment.PG_PORT}
+
+    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-internetgateway.html
+    ServerlessInternetGateway: 
+        Type: AWS::EC2::InternetGateway
+        Properties:
+          Tags:
+            - Key: "Name"
+              Value: "InternetGateway"
+
+    #: -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
+    ServerlessSubnetA: 
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:custom.RDS.SUBNET_REGION_A}
+        CidrBlock: 10.0.0.0/24
+    ServerlessSubnetB: 
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:custom.RDS.SUBNET_REGION_B}
+        CidrBlock: 10.0.1.0/24
+
+    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbsubnet-group.html
+    ServerlessSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+        DBSubnetGroupName: rdssubnets
+        DBSubnetGroupDescription: United RDS Subnets
+        SubnetIds:
+          - Ref: ServerlessSubnetA
+          - Ref: ServerlessSubnetB
+
+    ServerlessPostgreGAVPC:
+      # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+          VpcId:
+            Ref: ServerlessVPC
+          InternetGatewayId:
+            Ref: ServerlessInternetGateway
+          
+    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-rds.html
+    ServerlessPostgreRDS: 
+      DependsOn: ServerlessPostgreGAVPC
+
+      Type: AWS::RDS::DBInstance
+      DeletionPolicy: Snapshot
+      Properties:
+        Engine: postgres
+        EngineVersion: "12.4"
+        DBInstanceClass: db.t2.micro
+        DBInstanceIdentifier: ${self:custom.RDS.DB_INSTANCE_NAME}
+        DBName: ${self:provider.environment.PG_DATABASE}
+        Port: ${self:provider.environment.PG_PORT}
+        MasterUsername:  ${self:provider.environment.PG_USERNAME}
+        MasterUserPassword:  ${self:provider.environment.PG_PASSWORD}
+        AllocatedStorage: '20'
+        StorageType: gp2
+        BackupRetentionPeriod: 7
+        PubliclyAccessible: true ## <--- !
+        DeletionProtection: false
+        AutoMinorVersionUpgrade: true
+        EnablePerformanceInsights: true
+        EnableIAMDatabaseAuthentication: false ## e.g IAM role has access only to specific tableName
+        DBSubnetGroupName:
+          Ref: ServerlessSubnetGroup
+        VPCSecurityGroups: 
+          - !GetAtt ServerlessRDSSecurityGroup.GroupId
+
+        

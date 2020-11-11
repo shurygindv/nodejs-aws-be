@@ -1,0 +1,27 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "title": "create product",
+    "required": ["title", "price", "description"],
+    "properties": {
+      "title": {
+        "type": "string",
+        "title": "e.g The Wolf of Wall Street",
+        "default": "",
+        "pattern": "^[a-zA-Z0-9 ,.]+$"
+      },
+      "description": {
+        "type": "string",
+        "title": "e.g Some description",
+        "default": "",
+        "pattern": "^[a-zA-Z0-9 ,.]+$"
+      },
+      "price": {
+        "type": "number",
+        "title": "e.g 6444",
+        "default": "",
+        "pattern": "^[0-9]+$"
+      }
+    }
+  }
