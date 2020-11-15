@@ -1,0 +1,82 @@
+service: rsschool-import-service
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-1
+  timeout: 10
+  memorySize: 256
+  apiGateway:
+    minimumCompressionSize: 1024
+
+  tracing:
+    apiGateway: true
+    lambda: true
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+      Resource:
+        - arn:aws:s3:::${self:service}
+
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource:
+        - arn:aws:s3:::${self:service}/*
+
+  environment:
+    BUCKET_NAME: ${self:service}
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    includeModules: true
+    keepOutputDirectory: true
+    packager: 'npm'
+
+functions:
+  importProductsFile:
+    handler: handler.importProductsFile
+    events:
+      - http:
+          path: import
+          method: get
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                name: true
+  
+  importsFileParser:
+    handler: handler.importsFileParser
+    events:
+      - s3:
+          bucket: ${self:provider.environment.BUCKET_NAME}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploaded/
+          existing: true
+  
+resources:
+  Resources:
+    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
+    CSVBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccelerateConfiguration: 
+          AccelerationStatus: Suspended
+        BucketName: ${self:provider.environment.BUCKET_NAME}
+        CorsConfiguration: 
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [GET, PUT]
+              AllowedOrigins: ['*']
+              Id: CORSCSVBucketRule
+              MaxAge: 10000
