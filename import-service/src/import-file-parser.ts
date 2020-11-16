@@ -68,6 +68,36 @@ const addProductWithStreamLogging = (s3, objectKey: string) =>
       .on("end", () => console.info("stream finished"));
   });
 
+
+const copyObject = (s3, recordObjectKey: string) => {
+  const copyCfg = {
+    Bucket: BUCKET_NAME,
+    CopySource: `${BUCKET_NAME}/${recordObjectKey}`,
+    Key: recordObjectKey.replace("uploaded", "parsed"),
+  };
+
+  return s3.copyObject(copyCfg).promise();
+} 
+
+
+const deleteObject = (s3, recordObjectKey: string) => {
+  const deleteCfg = {
+    Bucket: BUCKET_NAME,
+    Key: recordObjectKey,
+  };
+
+  return s3.deleteObject(deleteCfg).promise();
+} 
+
+
+const getRecordS3PathKey = (record: any) => {
+  const s3ObjectKey = record.s3.object.key;
+  // why here decode? GOOD QUESTION
+  // because spaces +, src: https://docs.aws.amazon.com/lambda/latest/dg/with-s3-example-deployment-pkg.html#with-s3-example-deployment-pkg-nodejs
+
+  return decodeURIComponent(s3ObjectKey.replace(/\+/g, " "));
+}
+
 export const importsFileParser: APIGatewayProxyHandler = async (
   event: any,
   _context
@@ -79,34 +109,16 @@ export const importsFileParser: APIGatewayProxyHandler = async (
     signatureVersion: "v4", // if eu region )
   });
 
-  const records = event.Records || [];
-
-  for (const record of records) {
-    const s3ObjectKey = record.s3.object.key;
-    const recordObjectKey = decodeURIComponent(s3ObjectKey.replace(/\+/g, " "));
-    // why here decode? because spaces, src: https://docs.aws.amazon.com/lambda/latest/dg/with-s3-example-deployment-pkg.html#with-s3-example-deployment-pkg-nodejs
-
-    console.info(recordObjectKey);
-    console.log(record.s3.object);
+  for (const record of event.Records || []) {
+    const recordS3Key = getRecordS3PathKey(record);
 
     try {
-      await addProductWithStreamLogging(s3, recordObjectKey);
-
-      const copyCfg = {
-        Bucket: BUCKET_NAME,
-        CopySource: `${BUCKET_NAME}/${recordObjectKey}`,
-        Key: recordObjectKey.replace("uploaded", "parsed"),
-      };
-
-      const deleteCfg = {
-        Bucket: BUCKET_NAME,
-        Key: recordObjectKey,
-      };
+      await addProductWithStreamLogging(s3, recordS3Key);
 
       console.info("done");
 
-      await s3.copyObject(copyCfg).promise();
-      await s3.deleteObject(deleteCfg).promise();
+      await copyObject(s3, recordS3Key)
+      await deleteObject(s3, recordS3Key)
     } catch (e) {
       console.error(e);
 
