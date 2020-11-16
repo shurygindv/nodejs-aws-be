@@ -25,7 +25,7 @@ export const importProductsFile: APIGatewayProxyHandler = async (
   event,
   _context
 ) => {
-  const csvFileName = Object(event.queryStringParameters).name as string;
+  const csvFileName = decodeURIComponent(Object(event.queryStringParameters).name || '');
 
   console.info(event);
 

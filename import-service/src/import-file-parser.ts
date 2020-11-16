@@ -82,9 +82,12 @@ export const importsFileParser: APIGatewayProxyHandler = async (
   const records = event.Records || [];
 
   for (const record of records) {
-    const recordObjectKey = record.s3.object.key;
+    const s3ObjectKey = record.s3.object.key;
+    const recordObjectKey = decodeURIComponent(s3ObjectKey.replace(/\+/g, " "));
+    // why here decode? because spaces, src: https://docs.aws.amazon.com/lambda/latest/dg/with-s3-example-deployment-pkg.html#with-s3-example-deployment-pkg-nodejs
 
     console.info(recordObjectKey);
+    console.log(record.s3.object);
 
     try {
       await addProductWithStreamLogging(s3, recordObjectKey);
