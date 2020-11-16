@@ -73,7 +73,7 @@ export const importsFileParser: APIGatewayProxyHandler = async (
   _context
 ) => {
   console.info(event);
-  
+
   const s3 = new AWS.S3({
     region: "eu-west-1",
     signatureVersion: "v4", // if eu region )
@@ -111,5 +111,8 @@ export const importsFileParser: APIGatewayProxyHandler = async (
     }
   }
 
-  return httpResponse.successResult({});
+  return httpResponse.success({
+    statusCode: 202,
+    result: null,
+  });
 };
