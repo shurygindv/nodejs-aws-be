@@ -6,15 +6,15 @@ import { httpResponse } from "./libs/http";
 
 import "source-map-support/register";
 
-const s3 = new AWS.S3({
-  region: "eu-west-1",
-  signatureVersion: "v4", // if eu region )
-});
-
 const isInvalidFileName = (name: string) => !v.isCSVFileName(name);
+const s3 = () =>
+  new AWS.S3({
+    region: "eu-west-1",
+    signatureVersion: "v4", // if eu region )
+  });
 
 const getSignedUrlAsync = (validFileName: string) =>
-  s3.getSignedUrlPromise("putObject", {
+  s3().getSignedUrlPromise("putObject", {
     Bucket: process.env.BUCKET_NAME,
     Key: `uploaded/${validFileName}`,
     Expires: 30,
@@ -30,8 +30,8 @@ export const importProductsFile: APIGatewayProxyHandler = async (
   console.info(event);
 
   if (isInvalidFileName(csvFileName)) {
-    return httpResponse.fileNotFound({
-      message: "give me next format: '[a-zA-Z0-9].csv'",
+    return httpResponse.failureResult({
+      message: `invalid filename, got: ${csvFileName}`,
     });
   }
 
@@ -45,7 +45,7 @@ export const importProductsFile: APIGatewayProxyHandler = async (
     console.error(e);
 
     return httpResponse.failureResult({
-      message: 'something went wrong'
+      message: "something went wrong",
     });
   }
 };

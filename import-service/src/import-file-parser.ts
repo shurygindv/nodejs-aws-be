@@ -7,17 +7,19 @@ import { httpResponse } from "./libs/http";
 
 import "source-map-support/register";
 
-// TODO: 1. refactor this, so much entities in one file
-
-const s3 = new AWS.S3({
-  region: "eu-west-1",
-  signatureVersion: "v4", // if eu region )
-});
+// TODO: refactor this file
 
 const BUCKET_NAME = process.env.BUCKET_NAME;
 
-// TODO: 2. avoid any
-const addProduct = (product: any) => {
+type Product = {
+  title: string;
+  count: number;
+  description: string;
+  price: number;
+  imageName?: string;
+};
+
+const addProduct = (product: Product) => {
   const url =
     "https://qt1ja1wqr9.execute-api.eu-west-1.amazonaws.com/dev/products";
 
@@ -43,18 +45,17 @@ const addProduct = (product: any) => {
 };
 
 // TODO: streams/promises pipeline later
-const addProductWithStreamLogging = (s3ObjectKey: string) =>
+const addProductWithStreamLogging = (s3, objectKey: string) =>
   new Promise((resolve, reject) => {
     const streamParams = {
       Bucket: BUCKET_NAME,
-      Key: s3ObjectKey,
+      Key: objectKey,
     };
 
-    const stream = s3.getObject(streamParams).createReadStream();
+    const s3Object = s3.getObject(streamParams);
 
-    console.info(streamParams);
-
-    stream
+    s3Object
+      .createReadStream()
       .pipe(csvParser())
       .on("data", (product) => {
         console.info(product);
@@ -62,7 +63,9 @@ const addProductWithStreamLogging = (s3ObjectKey: string) =>
         // temp: only for demo file uploading
         addProduct(product).then(resolve).catch(reject);
       })
-      .on("error", reject);
+      .on("error", reject)
+      .on("close", () => console.info("stream closed"))
+      .on("end", () => console.info("stream finished"));
   });
 
 export const importsFileParser: APIGatewayProxyHandler = async (
@@ -70,14 +73,21 @@ export const importsFileParser: APIGatewayProxyHandler = async (
   _context
 ) => {
   console.info(event);
+  
+  const s3 = new AWS.S3({
+    region: "eu-west-1",
+    signatureVersion: "v4", // if eu region )
+  });
 
-  for (const record of event.Records) {
+  const records = event.Records || [];
+
+  for (const record of records) {
     const recordObjectKey = record.s3.object.key;
 
-    console.info(record.s3.object);
+    console.info(recordObjectKey);
 
     try {
-      await addProductWithStreamLogging(recordObjectKey);
+      await addProductWithStreamLogging(s3, recordObjectKey);
 
       const copyCfg = {
         Bucket: BUCKET_NAME,
@@ -89,6 +99,8 @@ export const importsFileParser: APIGatewayProxyHandler = async (
         Bucket: BUCKET_NAME,
         Key: recordObjectKey,
       };
+
+      console.info("done");
 
       await s3.copyObject(copyCfg).promise();
       await s3.deleteObject(deleteCfg).promise();
