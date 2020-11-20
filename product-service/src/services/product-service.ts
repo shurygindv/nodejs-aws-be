@@ -3,6 +3,7 @@ import { productRepository } from '../repositories/product-repository';
 type Product = {
   id?: string;
   title: string;
+  count: number;
   description: string;
   price: number;
   imageName?: string;

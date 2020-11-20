@@ -5,19 +5,12 @@ import { httpResponse } from "../../libs/http";
 import { lambda } from "../../libs/lambda";
 import { productService } from "../../services/product-service";
 import { validateProductBody } from "./validation-scheme";
-// TODO: refactor this
 
-type Product = {
-  id?: string;
-  title: string;
-  description: string;
-  price: number;
-  imageName?: string;
-};
 
-// urlendecoded parser, todo: avoida ny, mapping templates
+// TODO: investigate why event.base comes in base64, avoid any
+// event.pathParamters, event.queryStringParamters are null
 const parse = (body: any) => {
-  const query = Buffer.from(body, 'base64').toString('UTF-8');; // TODO: because event.pathParamters null, queryStringParamters null
+  const query = Buffer.from(body, 'base64').toString('UTF-8');
 
   return querystring.parse(query);
 }
