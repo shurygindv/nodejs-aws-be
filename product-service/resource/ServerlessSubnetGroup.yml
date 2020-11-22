@@ -1,0 +1,9 @@
+# -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbsubnet-group.html
+
+Type: AWS::RDS::DBSubnetGroup
+Properties:
+  DBSubnetGroupName: rdssubnets
+  DBSubnetGroupDescription: United RDS Subnets
+  SubnetIds:
+    - Ref: ServerlessSubnetA
+    - Ref: ServerlessSubnetB

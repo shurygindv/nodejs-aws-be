@@ -1,11 +1,3 @@
-# nodejs-aws-be
+# Disclaimer
 
-
-
-### Testing
-
-npm run test
-
-### Swagger
-
-use `https://editor.swagger.io/` for details (copy swagger.json)
+Repo for experiments, any important data (passwords/connectionString/etc.) in this repo is fictional and unreal, only sample
