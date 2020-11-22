@@ -4,10 +4,13 @@
   "description": "Serverless webpack example using Typescript",
   "main": "handler.js",
   "scripts": {
-    "test": "serverless invoke test"
+    "test": "serverless invoke test",
+    "predeploy": "serverless package"
   },
   "dependencies": {
+    "@types/aws-sdk": "^2.7.0",
     "ajv": "^6.12.6",
+    "aws-sdk": "^2.797.0",
     "pg": "^8.4.2",
     "source-map-support": "^0.5.10"
   },

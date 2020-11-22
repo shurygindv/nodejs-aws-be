@@ -1,8 +1,5 @@
-import { getAllProducts } from "./lambda/get-all-products";
-import { getProductById } from "./lambda/get-product-by-id";
-import { serveStaticAsset } from "./lambda/serve-static-asset";
-import { createProduct } from "./lambda/create-product/create-product";
-
-import "source-map-support/register";
-
-export { createProduct, getProductById, getAllProducts, serveStaticAsset };
+export { getAllProducts } from './lambda/get-all-products';
+export { getProductById } from './lambda/get-product-by-id';
+export { serveStaticAsset } from './lambda/serve-static-asset';
+export { catalogBatchProcess } from './lambda/catalog-batch-process';
+export { createProduct } from './lambda/create-product/create-product';

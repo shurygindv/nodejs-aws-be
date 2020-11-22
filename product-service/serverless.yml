@@ -17,12 +17,27 @@ provider:
     apiGateway: true
     lambda: true
 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - !GetAtt CatalogItemsQueue.Arn
+
+    - Effect: Allow
+      Action:
+        - sns:*
+      Resource:
+        - !Ref CreateProductTopic
+
   environment:
     PG_HOST: !GetAtt ServerlessPostgreRDS.Endpoint.Address
     PG_PORT: ${env:PG_DB_PORT}
     PG_DATABASE: ${env:PG_DB_NAME}
     PG_USERNAME: ${env:PG_DB_USERNAME}
     PG_PASSWORD: ${env:PG_DB_PASSWORD}
+
+    PRODUCT_TOPIC_ARN: !Ref CreateProductTopic
 
 plugins:
   - serverless-jest-plugin
@@ -50,6 +65,13 @@ custom:
       file: true
 
 functions:
+  catalogBatchProcess:
+    handler: handler.catalogBatchProcess
+    events:
+      - sqs:
+          arn: !GetAtt CatalogItemsQueue.Arn
+          batchSize: 5
+
   serveStaticAsset:
     handler: handler.serveStaticAsset
     events:
@@ -90,7 +112,38 @@ functions:
                 productId: true
 
 resources:
+  Outputs:
+    SharedCatalogItemsQueueUrl:
+      Value: !Ref CatalogItemsQueue
+      Export:
+        Name: SharedCatalogItemsQueueUrl
+    SharedCatalogItemsQueueArn:
+      Value: !GetAtt CatalogItemsQueue.Arn
+      Export:
+        Name: SharedCatalogItemsQueueArn
+
   Resources:
+    CatalogItemsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalog-items-queue
+        DelaySeconds: 10
+
+    CreateProductTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: notify by email when adding new product
+        TopicName: create-product-topic
+
+    createProductEmailSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref CreateProductTopic
+        Protocol: email
+        Endpoint: Daniil_Shurygin@epam.com
+
+
+
     # -> setup for Postgre DB VPC (gateway, subnets..), 
     # todo: 1. maybe prefix DB-Postgre 2. bastion ssh host for db server access
     ServerlessVPC: ${file(./resource/ServerlessVPC.yml)}

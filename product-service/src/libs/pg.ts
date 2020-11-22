@@ -20,6 +20,10 @@ export const createDatabaseConnection = async () => {
 
     const client = await pool.connect();
 
+    console.info("<< BEGIN: PG OPTIONS >>")
+    console.info(options);
+    console.info("<< END: PG OPTIONS >>")
+
     return {
         query: (query: string, v?: any[]) => client.query(query, v),
       //  act: (query: string) => client.query(query),
