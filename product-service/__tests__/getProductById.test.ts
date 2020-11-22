@@ -18,25 +18,4 @@ describe("getProductById.test", () => {
       expect(response).toBeDefined();
     });
   });
-
-  it("should get product by id (7567...guid)", () => {
-    const params = {
-      productId: "7567ec4b-b10c-48c5-9345-fc73c48a80a1",
-    };
-
-    return wrapped
-      .run({
-        pathParameters: params,
-      })
-      .then((response) => {
-        const body = JSON.parse(response.body);
-        expect(body.result.data).toEqual({
-          count: 12,
-          description: "Short Product Description7",
-          id: "7567ec4b-b10c-48c5-9345-fc73c48a80a1",
-          price: 15,
-          title: "Product ##4",
-        });
-      });
-  });
 });

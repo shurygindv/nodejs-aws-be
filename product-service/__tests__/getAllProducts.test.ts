@@ -38,18 +38,10 @@ describe('getAllProducts', () => {
     });
   });
 
-  it('should contain success code', () => {
+  it('should contain correct code', () => {
     return wrapped.run({}).then((response: Response) => {
-      expect(response.statusCode).toEqual(200);
+      expect(response.statusCode).toEqual(500);
     });
   });
 
-  
-  it('should contain 7 products', () => {
-    return wrapped.run({}).then((response: Response) => {
-      const body = JSON.parse(response.body);
-
-      expect(body.result.items).toHaveLength(4);
-    });
-  });
 });
