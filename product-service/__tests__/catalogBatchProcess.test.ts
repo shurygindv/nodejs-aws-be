@@ -1,4 +1,3 @@
-
 import * as jestPlugin from "serverless-jest-plugin";
 
 import * as mod from "./../handler";
@@ -22,7 +21,6 @@ const fakeEventProduct = JSON.stringify({
   title: "Product ##4",
 });
 
-// @ts-ignore
 const fakeEvent = {
   Records: [
     {
@@ -81,7 +79,7 @@ describe("catalogBatchProcess.test", () => {
     });
   });
 
-  it("PG: should call SNS with body", async () => {
+  it("should call SNS with body", async () => {
     await snsInstance.publish.mockClear();
 
     return wrapped.run(fakeEvent).then(() => {
@@ -95,7 +93,7 @@ describe("catalogBatchProcess.test", () => {
     });
   });
 
-  it("PG: should release connection twice", async () => {
+  it("PG: should release connection once", async () => {
     await pgClient.release.mockClear();
 
     return wrapped.run(fakeEvent).then(() => {

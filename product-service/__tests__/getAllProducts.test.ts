@@ -1,4 +1,3 @@
-// import { PoolClient } from 'pg';
 import * as jestPlugin from "serverless-jest-plugin";
 
 import * as mod from "./../handler";
@@ -14,7 +13,6 @@ type Response = {
 };
 
 const pgClient = {
-  // @ts-ignore
   query: jest.fn(() =>
     Promise.resolve({
       rows: [],
@@ -70,7 +68,6 @@ describe("getAllProducts", () => {
 
   it("PG: should query PG once", async () => {
     await pgClient.query.mockClear();
-
 
     return wrapped.run({}).then(() => {
       expect(pgClient.query).toHaveBeenCalledTimes(1);
