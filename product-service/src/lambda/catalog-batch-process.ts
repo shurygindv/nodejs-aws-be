@@ -10,6 +10,7 @@ const PRODUCT_TOPIC_ARN = process.env.PRODUCT_TOPIC_ARN;
 const withParams = product => ({
   Message: JSON.stringify(product),
   TopicArn: PRODUCT_TOPIC_ARN,
+  Subject: `Hey! Somebody has uploaded files`
 });
 
 const handleResult = (e: Error) => {
