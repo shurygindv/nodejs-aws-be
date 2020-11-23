@@ -28,7 +28,7 @@ provider:
       Action:
         - sns:*
       Resource:
-        - !Ref CreateProductTopic
+        - !Ref ProductTopic
 
   environment:
     PG_HOST: !GetAtt ServerlessPostgreRDS.Endpoint.Address
@@ -37,7 +37,7 @@ provider:
     PG_USERNAME: ${env:PG_DB_USERNAME}
     PG_PASSWORD: ${env:PG_DB_PASSWORD}
 
-    PRODUCT_TOPIC_ARN: !Ref CreateProductTopic
+    PRODUCT_TOPIC_ARN: !Ref ProductTopic
 
 plugins:
   - serverless-jest-plugin
@@ -129,20 +129,46 @@ resources:
         QueueName: catalog-items-queue
         DelaySeconds: 10
 
-    CreateProductTopic:
+    ProductTopic:
       Type: AWS::SNS::Topic
       Properties:
         DisplayName: notify by email when adding new product
-        TopicName: create-product-topic
+        TopicName: product-topic
 
-    createProductEmailSubscription:
+
+    # -> https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html
+    productEmailSubscription:
       Type: AWS::SNS::Subscription
       Properties:
-        TopicArn: !Ref CreateProductTopic
+        TopicArn: !Ref ProductTopic
         Protocol: email
         Endpoint: Daniil_Shurygin@epam.com
-
-
+    
+    filteredProductEmailSubscription1:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref ProductTopic
+        Protocol: email
+        Endpoint: vjbzedsspwgsfks@affecting.org # temp mail: https://mail.tm/en
+        FilterPolicy: 
+          description: 
+            - "Test 1"
+            - "Test 2"
+            - "Maybe test 3?"
+          price:
+            - numeric:
+              - ">="
+              - 10000
+    
+    filteredProductEmailSubscription2:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref ProductTopic
+        Protocol: email
+        Endpoint: vjbzedsspwgsfks@affecting.org # temp mail: https://mail.tm/en
+        FilterPolicy: 
+          title:
+            - "Hey, go on our email"
 
     # -> setup for Postgre DB VPC (gateway, subnets..), 
     # todo: 1. maybe prefix DB-Postgre 2. bastion ssh host for db server access
