@@ -20,7 +20,7 @@ module.exports = {
     filename: '[name].js',
   },
   target: 'node',
-  externals: [nodeExternals()],
+  externals: [nodeExternals(), 'aws-sdk'],
   module: {
     rules: [
       {

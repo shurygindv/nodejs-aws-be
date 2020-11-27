@@ -27,8 +27,15 @@ provider:
       Resource:
         - arn:aws:s3:::${self:service}/*
 
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - ${cf:rsschool-product-service-dev.SharedCatalogItemsQueueArn}
+
   environment:
     BUCKET_NAME: ${self:service}
+    SQS_PRODUCT_URL: ${cf:rsschool-product-service-dev.SharedCatalogItemsQueueUrl}
 
 plugins:
   - serverless-webpack

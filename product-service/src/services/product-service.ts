@@ -13,6 +13,10 @@ const addProduct = (p: Product) => {
   return productRepository.addProduct(p)
 };
 
+const addManyProducts = (items: Product[]) => {
+  return productRepository.addManyProducts(items);
+}
+
 const getAllProducts = () => {
   return productRepository.getAllProducts();
 };
@@ -30,4 +34,5 @@ export const productService = {
   getAllProducts,
   getProductById,
   getProductStocks,
+  addManyProducts,
 };

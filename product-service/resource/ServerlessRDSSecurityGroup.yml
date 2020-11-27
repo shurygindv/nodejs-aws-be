@@ -1,0 +1,15 @@
+# -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+
+DependsOn: ServerlessVPC
+
+Type: AWS::EC2::SecurityGroup
+Properties:
+  GroupName: "RSSchool test security group"
+  GroupDescription: "allow all traffic TCP/IP; TODO: limit, trusted"
+  VpcId:
+    Ref: ServerlessVPC
+  SecurityGroupIngress:
+    - IpProtocol: tcp
+      CidrIp: 0.0.0.0/0
+      FromPort: ${self:provider.environment.PG_PORT}
+      ToPort: ${self:provider.environment.PG_PORT}

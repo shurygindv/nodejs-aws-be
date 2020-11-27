@@ -1,4 +1,4 @@
-service: rsschool-aws-product-service
+service: rsschool-product-service
 
 provider:
   name: aws
@@ -17,12 +17,27 @@ provider:
     apiGateway: true
     lambda: true
 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - !GetAtt CatalogItemsQueue.Arn
+
+    - Effect: Allow
+      Action:
+        - sns:*
+      Resource:
+        - !Ref ProductTopic
+
   environment:
-    PG_HOST: ${env:PG_DB_HOST}
+    PG_HOST: !GetAtt ServerlessPostgreRDS.Endpoint.Address
     PG_PORT: ${env:PG_DB_PORT}
     PG_DATABASE: ${env:PG_DB_NAME}
     PG_USERNAME: ${env:PG_DB_USERNAME}
     PG_PASSWORD: ${env:PG_DB_PASSWORD}
+
+    PRODUCT_TOPIC_ARN: !Ref ProductTopic
 
 plugins:
   - serverless-jest-plugin
@@ -50,6 +65,13 @@ custom:
       file: true
 
 functions:
+  catalogBatchProcess:
+    handler: handler.catalogBatchProcess
+    events:
+      - sqs:
+          arn: !GetAtt CatalogItemsQueue.Arn
+          batchSize: 5
+
   serveStaticAsset:
     handler: handler.serveStaticAsset
     events:
@@ -89,106 +111,74 @@ functions:
               paths: 
                 productId: true
 
-
-# TODO: 1. bastion ssh host for db connection
 resources:
+  Outputs:
+    SharedCatalogItemsQueueUrl:
+      Value: !Ref CatalogItemsQueue
+      Export:
+        Name: SharedCatalogItemsQueueUrl
+    SharedCatalogItemsQueueArn:
+      Value: !GetAtt CatalogItemsQueue.Arn
+      Export:
+        Name: SharedCatalogItemsQueueArn
+
   Resources:
-    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc.html
-    ServerlessVPC: 
-      Type: AWS::EC2::VPC
+    CatalogItemsQueue:
+      Type: AWS::SQS::Queue
       Properties:
-        CidrBlock: 10.0.0.0/16
-        EnableDnsSupport: true
-        EnableDnsHostnames: true
-        InstanceTenancy: default
+        QueueName: catalog-items-queue
+        DelaySeconds: 10
 
-    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
-    ServerlessRDSSecurityGroup:
-      DependsOn: ServerlessVPC
-
-      Type: AWS::EC2::SecurityGroup
+    ProductTopic:
+      Type: AWS::SNS::Topic
       Properties:
-        GroupName: "RSSchool test security group"
-        GroupDescription: "allow all traffic TCP/IP; TODO: limit, trusted"
-        VpcId:
-          Ref: ServerlessVPC
-        SecurityGroupIngress:
-        - IpProtocol: tcp
-          CidrIp: 0.0.0.0/0
-          FromPort: ${self:provider.environment.PG_PORT}
-          ToPort: ${self:provider.environment.PG_PORT}
+        DisplayName: notify by email when adding new product
+        TopicName: product-topic
 
-    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-internetgateway.html
-    ServerlessInternetGateway: 
-        Type: AWS::EC2::InternetGateway
-        Properties:
-          Tags:
-            - Key: "Name"
-              Value: "InternetGateway"
 
-    #: -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
-    ServerlessSubnetA: 
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::Subnet
+    # -> https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html
+    productEmailSubscription:
+      Type: AWS::SNS::Subscription
       Properties:
-        VpcId:
-          Ref: ServerlessVPC
-        AvailabilityZone: ${self:custom.RDS.SUBNET_REGION_A}
-        CidrBlock: 10.0.0.0/24
-    ServerlessSubnetB: 
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::Subnet
+        TopicArn: !Ref ProductTopic
+        Protocol: email
+        Endpoint: Daniil_Shurygin@epam.com
+    
+    filteredProductEmailSubscription1:
+      Type: AWS::SNS::Subscription
       Properties:
-        VpcId:
-          Ref: ServerlessVPC
-        AvailabilityZone: ${self:custom.RDS.SUBNET_REGION_B}
-        CidrBlock: 10.0.1.0/24
+        TopicArn: !Ref ProductTopic
+        Protocol: email
+        Endpoint: vjbzedsspwgsfks@affecting.org # temp mail: https://mail.tm/en
+        FilterPolicy: 
+          description: 
+            - "Test 1"
+            - "Test 2"
+            - "Maybe test 3?"
+          price:
+            - numeric:
+              - ">="
+              - 10000
+    
+    filteredProductEmailSubscription2:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref ProductTopic
+        Protocol: email
+        Endpoint: vjbzedsspwgsfks@affecting.org # temp mail: https://mail.tm/en
+        FilterPolicy: 
+          title:
+            - "Hey, go on our email"
 
-    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbsubnet-group.html
-    ServerlessSubnetGroup:
-      Type: AWS::RDS::DBSubnetGroup
-      Properties:
-        DBSubnetGroupName: rdssubnets
-        DBSubnetGroupDescription: United RDS Subnets
-        SubnetIds:
-          - Ref: ServerlessSubnetA
-          - Ref: ServerlessSubnetB
-
-    ServerlessPostgreGAVPC:
-      # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html
-      Type: AWS::EC2::VPCGatewayAttachment
-      Properties:
-          VpcId:
-            Ref: ServerlessVPC
-          InternetGatewayId:
-            Ref: ServerlessInternetGateway
-          
-    # -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-rds.html
-    ServerlessPostgreRDS: 
-      DependsOn: ServerlessPostgreGAVPC
-
-      Type: AWS::RDS::DBInstance
-      DeletionPolicy: Snapshot
-      Properties:
-        Engine: postgres
-        EngineVersion: "12.4"
-        DBInstanceClass: db.t2.micro
-        DBInstanceIdentifier: ${self:custom.RDS.DB_INSTANCE_NAME}
-        DBName: ${self:provider.environment.PG_DATABASE}
-        Port: ${self:provider.environment.PG_PORT}
-        MasterUsername:  ${self:provider.environment.PG_USERNAME}
-        MasterUserPassword:  ${self:provider.environment.PG_PASSWORD}
-        AllocatedStorage: '20'
-        StorageType: gp2
-        BackupRetentionPeriod: 7
-        PubliclyAccessible: true ## <--- !
-        DeletionProtection: false
-        AutoMinorVersionUpgrade: true
-        EnablePerformanceInsights: true
-        EnableIAMDatabaseAuthentication: false ## e.g IAM role has access only to specific tableName
-        DBSubnetGroupName:
-          Ref: ServerlessSubnetGroup
-        VPCSecurityGroups: 
-          - !GetAtt ServerlessRDSSecurityGroup.GroupId
+    # -> setup for Postgre DB VPC (gateway, subnets..), 
+    # todo: 1. maybe prefix DB-Postgre 2. bastion ssh host for db server access
+    ServerlessVPC: ${file(./resource/ServerlessVPC.yml)}
+    ServerlessRDSSecurityGroup: ${file(./resource/ServerlessRDSSecurityGroup.yml)}
+    ServerlessInternetGateway: ${file(./resource/ServerlessInternetGateway.yml)}
+    ServerlessSubnetA: ${file(./resource/ServerlessSubnetA.yml)}
+    ServerlessSubnetB: ${file(./resource/ServerlessSubnetB.yml)}
+    ServerlessSubnetGroup: ${file(./resource/ServerlessSubnetGroup.yml)}
+    ServerlessPostgreGAVPC: ${file(./resource/ServerlessPostgreGAVPC.yml)}
+    ServerlessPostgreRDS: ${file(./resource/ServerlessPostgreRDS.yml)}
 
         

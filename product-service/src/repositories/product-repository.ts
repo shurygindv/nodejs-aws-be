@@ -53,6 +53,19 @@ const addProduct = async (p: Product) => {
   }
 };
 
+// TODO: pg format
+const addManyProducts = async (products: Product[]) => {
+  try {
+    const results = await Promise.all(products.map(product => addProduct(product)));
+    console.info("DB RESULTS");
+    console.log(results);
+
+    return results;
+  } catch (e) {
+    throw new Error(`ProductService(addManyProducts): can't handle ${e.message}`);
+  }
+}
+
 const getAllProducts = async () => {
   const connection = await createDatabaseConnection();
 
@@ -111,4 +124,5 @@ export const productRepository = {
   getAllProducts,
   getProductById,
   getProductStocks,
+  addManyProducts,
 };

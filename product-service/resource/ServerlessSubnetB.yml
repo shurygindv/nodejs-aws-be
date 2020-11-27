@@ -1,0 +1,9 @@
+#: -> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
+
+DependsOn: ServerlessVPC
+Type: AWS::EC2::Subnet
+Properties:
+  VpcId:
+    Ref: ServerlessVPC
+  AvailabilityZone: ${self:custom.RDS.SUBNET_REGION_B}
+  CidrBlock: 10.0.1.0/24
