@@ -51,7 +51,7 @@ export const basicAuthorizer: APIGatewayProxyHandler = (event, _, callback) => {
   }
 
   try {
-    const [effect, denyDescription] = getAccessTypeForUser(
+    const [effect, details] = getAccessTypeForUser(
       parseCredentials(principalId)
     );
 
@@ -61,7 +61,7 @@ export const basicAuthorizer: APIGatewayProxyHandler = (event, _, callback) => {
       effect,
       principalId,
       resource: event.methodArn,
-      description: denyDescription,
+      description: details,
     });
 
     console.info(policy);
