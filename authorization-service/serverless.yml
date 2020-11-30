@@ -1,0 +1,46 @@
+service: rsschool-authorization-service
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-1
+  timeout: 10
+  memorySize: 256
+  apiGateway:
+    minimumCompressionSize: 1024
+
+  tracing:
+    apiGateway: true
+    lambda: true
+
+plugins:
+  - serverless-webpack
+  - serverless-dotenv-plugin
+
+custom:
+  webpack:
+    webpackConfig: "webpack.config.js"
+    includeModules: true
+    keepOutputDirectory: true
+    packager: "npm"
+
+  dotenv:
+    required:
+      file: true
+
+functions:
+  basicAuthorizer:
+    handler: handler.basicAuthorizer
+    events:
+      - http:
+          path: auth-import
+          method: get
+          
+resources:
+  Outputs:
+    SharedBasicAuthArn:
+      Value: !GetAtt BasicAuthorizerLambdaFunction.Arn
+      Export:
+        Name: SharedBasicAuthArn
+      
