@@ -37,6 +37,9 @@ provider:
     BUCKET_NAME: ${self:service}
     SQS_PRODUCT_URL: ${cf:rsschool-product-service-dev.SharedCatalogItemsQueueUrl}
 
+package:
+  individually: true
+
 plugins:
   - serverless-webpack
   - serverless-offline
@@ -57,6 +60,13 @@ functions:
           path: import
           method: get
           cors: true
+          authorizer:
+            type: TOKEN
+            name: AuthForImportService
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0
+            arn: ${cf:rsschool-authorization-service-dev.SharedBasicAuthArn}
+
           request:
             parameters:
               querystrings:
@@ -88,3 +98,35 @@ resources:
               AllowedOrigins: ['*']
               Id: CORSCSVBucketRule
               MaxAge: 10000
+
+    ForbiddenGatewayResponse:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        ResponseType: ACCESS_DENIED
+        ResponseTemplates:
+          application/json: |
+            {
+              "success": false,
+              "message": "access denied"
+            }
+        RestApiId: !Ref ApiGatewayRestApi
+        StatusCode: 403
+
+    UnauthorizedGatewayResponse:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        ResponseTemplates:
+            application/json: |
+              {
+                "success": false,
+                "message": "unauthorized"
+              }
+        ResponseType: UNAUTHORIZED
+        RestApiId: !Ref ApiGatewayRestApi
+        StatusCode: 401
