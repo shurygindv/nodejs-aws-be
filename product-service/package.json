@@ -5,7 +5,7 @@
   "main": "handler.js",
   "scripts": {
     "test": "serverless invoke test",
-    "predeploy": "serverless package"
+    "pack": "serverless package"
   },
   "dependencies": {
     "@types/aws-sdk": "^2.7.0",
