@@ -4,7 +4,35 @@ name: CI Node.js AWS BE
 on: [push, pull_request]
 
 jobs:
-  product-service-feels-fine:
+###############################
+  import-service:
+    name: import-service-feels-fine
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: import-service
+    strategy:
+      fail-fast: true
+      matrix:
+        node-version: [12.x]
+        
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2.1.2
+
+      - name: install dependencies
+        run: npm i
+
+      - name: sls packing
+        run: npm run pack
+
+      - name: run tests
+        run: npm run test
+###############################
+  product-service:
     name: product-service-feels-fine
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -30,8 +58,8 @@ jobs:
 
       - name: run tests
         run: npm run test
-
-  auth-service-feels-fine:
+###############################
+  auth-service:
     name: auth-service-feels-fine
     runs-on: ubuntu-latest
     timeout-minutes: 5
