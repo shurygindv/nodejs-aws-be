@@ -5,7 +5,7 @@
   "main": "handler.js",
   "scripts": {
     "test": "serverless invoke test",
-    "pack": "serverless webpack"
+    "pack": "echo \"Error: no packing specified\" && exit 0"
   },
   "dependencies": {
     "aws-sdk": "^2.792.0",
