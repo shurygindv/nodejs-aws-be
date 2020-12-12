@@ -6,7 +6,7 @@ import { EnvironmentService } from './environment-service';
 export type ProxyOptions<T = any> = {
   method: string;
   url: string;
-  body: T;
+  body?: T;
 };
 
 const fetchProxyResultAsync = (params: any) => {
