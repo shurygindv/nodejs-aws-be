@@ -3,11 +3,11 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-import { CardModule } from './modules/card';
+import { CartModule } from './modules/cart';
 import { ProductModule } from './modules/product';
 
 @Module({
-  imports: [CardModule, ProductModule],
+  imports: [CartModule, ProductModule],
   controllers: [AppController],
   providers: [AppService],
 })

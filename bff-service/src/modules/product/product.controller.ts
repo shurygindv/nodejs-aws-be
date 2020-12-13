@@ -14,42 +14,51 @@ const TWO_MINUTES = ONE_MINUTE * 2;
 export class ProductController {
   constructor(private httpProxyManager: HttpProxyManager) {}
 
-  @Cache({ ttl: TWO_MINUTES, key: 'products' })
-  @Get('/products')
-  async getAllCachedProducts(@Req() req: Request) {
-    return this.proxyAnyRequest(req);
-  }
-
   private callProductProxy(o: ProxyOptions): Promise<any> {
     return this.httpProxyManager.callProductService(o);
   }
 
-  @All()
-  async proxyAnyRequest(@Req() req: Request) {
-    const { method, body, url } = req;
-
-    let data;
+  private async proxyProductRequest(options: ProxyOptions) {
+    let response;
 
     try {
-      data = await this.callProductProxy({
+      const { method, body, url } = options;
+
+      response = await this.callProductProxy({
         url,
-        method,
         body,
+        method,
       });
     } catch (e) {
       console.error(e.message);
-      
+
       return {
         statusCode: HttpStatus.BAD_GATEWAY,
         error: e.message,
       };
     }
 
-    console.info(data);
-
     return {
       statusCode: HttpStatus.OK,
-      data,
+      data: response.data,
     };
+  }
+
+  @Get('/products')
+  @Cache({ ttl: TWO_MINUTES, key: 'products' })
+  public getAllCachedProducts(@Req() req: Request) {
+    return this.proxyProductRequest({
+      url: '/products',
+      method: req.method,
+    });
+  }
+
+  @All()
+  public getAnyRequest(@Req() req: Request) {
+    return this.proxyProductRequest({
+      url: req.url,
+      body: req.body,
+      method: req.method,
+    });
   }
 }

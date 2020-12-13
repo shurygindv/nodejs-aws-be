@@ -10,12 +10,14 @@ export type ProxyOptions<T = any> = {
 };
 
 const fetchProxyResultAsync = (params: any) => {
+
   const proxyRequest = {
     url: params.url,
     data: params.body,
     method: params.method,
   };
 
+  console.log(proxyRequest)
   return axios(proxyRequest);
 };
 

@@ -5,8 +5,8 @@ import {
   ProxyOptions,
 } from '../../services/http-proxy-manager';
 
-@Controller('cards')
-export class CardController {
+@Controller('carts')
+export class CartController {
   constructor(private httpProxyManager: HttpProxyManager) {}
 
   private callCardProxy(o: ProxyOptions): Promise<any> {
@@ -15,12 +15,12 @@ export class CardController {
 
   @All()
   async proxyAnyRequest(@Req() req: Request) {
-    const { method, body, url } = req;
-
-    let data;
+    let response;
 
     try {
-      data = await this.callCardProxy({
+      const { method, body, url } = req;
+
+      response = await this.callCardProxy({
         method,
         url,
         body,
@@ -34,11 +34,9 @@ export class CardController {
       };
     }
 
-    console.info(data);
-
     return {
       statusCode: HttpStatus.OK,
-      data,
+      data: response.data,
     };
   }
 }
