@@ -1,4 +1,4 @@
-import { Controller, All, Req, Get, Request, HttpStatus } from '@nestjs/common';
+import { Controller, All, Req, Request, HttpStatus, Get, /* CacheInterceptor */ } from '@nestjs/common';
 
 import {
   HttpProxyManager,
@@ -30,16 +30,22 @@ export class ProductController {
         method
       });
     } catch (e) {
-      console.error(e.message);
+      console.error(`proxy card error: ${JSON.stringify(e)}`);
+
+      const {
+        status = HttpStatus.INTERNAL_SERVER_ERROR,
+        data = { error: e.message }
+      } = e.response || {};
 
       return {
-        statusCode: HttpStatus.BAD_GATEWAY,
-        error: e.message,
+        status,
+        message: e.message,
+        data
       };
     }
 
     return {
-      statusCode: HttpStatus.OK,
+      status: HttpStatus.OK,
       data: response.data,
     };
   }

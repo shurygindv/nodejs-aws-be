@@ -9,11 +9,16 @@ export type ProxyOptions<T = any> = {
   body?: T;
 };
 
+const isEmpty = <T>(obj: T) => {
+  return Object.keys(obj || {}).length <= 0;
+}
+
 const fetchProxyResultAsync = (params: any) => {
+  const data = isEmpty(params.body) ? undefined : params.body;
 
   const proxyRequest = {
     url: params.url,
-    data: params.body,
+    data: data,
     method: params.method
   };
 
