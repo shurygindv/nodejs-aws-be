@@ -28,6 +28,8 @@ export class ProductController {
   async proxyAnyRequest(@Req() req: Request) {
     const { method, body, url } = req;
 
+    let data;
+
     try {
       data = await this.callProductProxy({
         url,
@@ -35,11 +37,15 @@ export class ProductController {
         body,
       });
     } catch (e) {
+      console.error(e.message);
+      
       return {
         statusCode: HttpStatus.BAD_GATEWAY,
         error: e.message,
       };
     }
+
+    console.info(data);
 
     return {
       statusCode: HttpStatus.OK,

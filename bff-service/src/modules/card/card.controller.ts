@@ -26,11 +26,15 @@ export class CardController {
         body,
       });
     } catch (e) {
+      console.error(e.message);
+
       return {
         statusCode: HttpStatus.BAD_GATEWAY,
         error: e.message,
       };
     }
+
+    console.info(data);
 
     return {
       statusCode: HttpStatus.OK,

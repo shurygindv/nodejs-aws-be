@@ -20,6 +20,8 @@ const fetchProxyResultAsync = (params: any) => {
 };
 
 const fetchProxyResultByUrl = (url: string, options: Partial<ProxyOptions>) => {
+  console.log(`request: ${url}`);
+
   return fetchProxyResultAsync({
     ...options,
     url,
@@ -30,17 +32,17 @@ const fetchProxyResultByUrl = (url: string, options: Partial<ProxyOptions>) => {
 export class HttpProxyManager {
   constructor(private envService: EnvironmentService) {}
 
-  public async callCardService(options: ProxyOptions) {
+  public callCardService(options: ProxyOptions) {
     const cardUrl = this.envService.getCardBaseUrl();
     const url = options.url;
 
-    return await fetchProxyResultByUrl(`${cardUrl}${url}`, options);
+    return fetchProxyResultByUrl(`${cardUrl}${url}`, options);
   }
 
-  public async callProductService(options: ProxyOptions) {
+  public callProductService(options: ProxyOptions) {
     const productUrl = this.envService.getProductBaseUrl();
     const url = options.url;
 
-    return await fetchProxyResultByUrl(`${productUrl}${url}`, options);
+    return fetchProxyResultByUrl(`${productUrl}${url}`, options);
   }
 }
