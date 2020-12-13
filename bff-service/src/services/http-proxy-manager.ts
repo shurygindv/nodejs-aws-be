@@ -14,7 +14,7 @@ const fetchProxyResultAsync = (params: any) => {
   const proxyRequest = {
     url: params.url,
     data: params.body,
-    method: params.method,
+    method: params.method
   };
 
   console.log(proxyRequest)

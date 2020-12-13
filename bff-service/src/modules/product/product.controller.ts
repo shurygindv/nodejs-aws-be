@@ -27,7 +27,7 @@ export class ProductController {
       response = await this.callProductProxy({
         url,
         body,
-        method,
+        method
       });
     } catch (e) {
       console.error(e.message);

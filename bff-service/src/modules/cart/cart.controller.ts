@@ -23,7 +23,7 @@ export class CartController {
       response = await this.callCardProxy({
         method,
         url,
-        body,
+        body
       });
     } catch (e) {
       console.error(e.message);
