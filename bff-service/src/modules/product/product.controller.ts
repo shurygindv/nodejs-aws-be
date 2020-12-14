@@ -1,4 +1,12 @@
-import { Controller, All, Req, Request, HttpStatus, Get, /* CacheInterceptor */ } from '@nestjs/common';
+import {
+  Controller,
+  All,
+  Req,
+  Request,
+  HttpStatus,
+  Get 
+  /* CacheInterceptor */,
+} from '@nestjs/common';
 
 import {
   HttpProxyManager,
@@ -27,20 +35,20 @@ export class ProductController {
       response = await this.callProductProxy({
         url,
         body,
-        method
+        method,
       });
     } catch (e) {
       console.error(`proxy card error: ${JSON.stringify(e)}`);
 
       const {
         status = HttpStatus.INTERNAL_SERVER_ERROR,
-        data = { error: e.message }
+        data = { error: e.message },
       } = e.response || {};
 
       return {
         status,
         message: e.message,
-        data
+        data,
       };
     }
 
@@ -60,7 +68,7 @@ export class ProductController {
   }
 
   @All()
-  public getAnyRequest(@Req() req: Request) {
+  public catchAnyRequest(@Req() req: Request) {
     return this.proxyProductRequest({
       url: req.url,
       body: req.body,

@@ -1,0 +1,6 @@
+/dist
+/node_modules
+/test
+
+swagger.yml
+npm-debug.log*

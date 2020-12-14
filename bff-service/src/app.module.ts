@@ -10,7 +10,6 @@ import { ProductModule } from './modules/product';
 // middleware
 import { RejectInvalidProxyMiddleware } from './middlewares/reject-invalid-proxy';
 
-
 @Module({
   imports: [CartModule, ProductModule],
   controllers: [AppController],
@@ -18,8 +17,6 @@ import { RejectInvalidProxyMiddleware } from './middlewares/reject-invalid-proxy
 })
 export class AppModule {
   public configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(RejectInvalidProxyMiddleware)
-      .forRoutes('*')
+    consumer.apply(RejectInvalidProxyMiddleware).forRoutes('*');
   }
 }

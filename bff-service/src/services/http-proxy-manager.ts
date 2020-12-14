@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpService } from '@nestjs/common';
 import { EnvironmentService } from './environment-service';
 
 export type ProxyOptions<T = any> = {
@@ -11,45 +9,45 @@ export type ProxyOptions<T = any> = {
 
 const isEmpty = <T>(obj: T) => {
   return Object.keys(obj || {}).length <= 0;
-}
-
-const fetchProxyResultAsync = (params: any) => {
-  const data = isEmpty(params.body) ? undefined : params.body;
-
-  const proxyRequest = {
-    url: params.url,
-    data: data,
-    method: params.method
-  };
-
-  console.log(proxyRequest)
-  return axios(proxyRequest);
-};
-
-const fetchProxyResultByUrl = (url: string, options: Partial<ProxyOptions>) => {
-  console.log(`request: ${url}`);
-
-  return fetchProxyResultAsync({
-    ...options,
-    url,
-  });
 };
 
 @Injectable()
 export class HttpProxyManager {
-  constructor(private envService: EnvironmentService) {}
+  constructor(
+    private envService: EnvironmentService,
+    private httpService: HttpService,
+  ) {}
+
+  private fetchProxyResultAsync(params: any) {
+    const data = isEmpty(params.body) ? undefined : params.body;
+
+    const proxyRequest = {
+      url: params.url,
+      data: data,
+      method: params.method,
+    };
+
+    return this.httpService.request(proxyRequest).toPromise();
+  }
+
+  private fetchProxyResultByUrl(url: string, options: Partial<ProxyOptions>) {
+    console.log(`request: ${url}`);
+
+    return this.fetchProxyResultAsync({
+      ...options,
+      url: `${url}${options.url}`,
+    });
+  }
 
   public callCardService(options: ProxyOptions) {
     const cardUrl = this.envService.getCardBaseUrl();
-    const url = options.url;
 
-    return fetchProxyResultByUrl(`${cardUrl}${url}`, options);
+    return this.fetchProxyResultByUrl(cardUrl, options);
   }
 
   public callProductService(options: ProxyOptions) {
     const productUrl = this.envService.getProductBaseUrl();
-    const url = options.url;
 
-    return fetchProxyResultByUrl(`${productUrl}${url}`, options);
+    return this.fetchProxyResultByUrl(productUrl, options);
   }
 }

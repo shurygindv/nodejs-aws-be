@@ -1,4 +1,11 @@
-import { Controller, All, Req, Request, HttpStatus, /* CacheInterceptor */ } from '@nestjs/common';
+import {
+  Controller,
+  All,
+  Req,
+  Request,
+  HttpStatus
+  /* CacheInterceptor */,
+} from '@nestjs/common';
 
 import {
   HttpProxyManager,
@@ -14,7 +21,7 @@ export class CartController {
   }
 
   @All()
-  async proxyAnyRequest(@Req() req: Request) {
+  async catchAnyRequest(@Req() req: Request) {
     let response;
 
     try {
@@ -23,20 +30,20 @@ export class CartController {
       response = await this.callCardProxy({
         method,
         url,
-        body
+        body,
       });
     } catch (e) {
       console.error(`proxy card error: ${JSON.stringify(e)}`);
 
       const {
         status = HttpStatus.INTERNAL_SERVER_ERROR,
-        data = { error: e.message }
+        data = { error: e.message },
       } = e.response || {};
 
       return {
         status,
         message: e.message,
-        data
+        data,
       };
     }
 

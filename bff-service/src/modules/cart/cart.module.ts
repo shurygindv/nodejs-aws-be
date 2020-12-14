@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, HttpModule } from '@nestjs/common';
 
 import { CartController } from './cart.controller';
 
@@ -6,7 +6,7 @@ import { HttpProxyManager } from '../../services/http-proxy-manager';
 import { EnvironmentService } from '../../services/environment-service';
 
 @Module({
-  imports: [],
+  imports: [HttpModule],
   controllers: [CartController],
   providers: [HttpProxyManager, EnvironmentService],
 })

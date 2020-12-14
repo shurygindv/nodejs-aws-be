@@ -16,7 +16,7 @@ const bootstrap = async () => {
   app.use(helmet());
 
   await app.listen(PORT);
-}
+};
 
 bootstrap().then(() => {
   console.log(`App is running on ${PORT} port`);
