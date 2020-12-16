@@ -1,0 +1,192 @@
+openapi: 3.0.1
+info:
+  title: rsschool-aws-bff-service
+  version: 1.0.0-oas3
+servers:
+  - url: 'http://shurygindv-bff-dev.eu-west-1.elasticbeanstalk.com'
+
+paths:
+  '/products/static/{file}':
+    get: 
+      description: Get file by name
+      responses:
+        '200':
+          description: 200 response
+    options:
+      responses:
+        '200':
+          description: 200 response
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+          content: {}
+  'products/products/{productId}':
+    get:
+      description: Get product by id
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code: 
+                    type: string
+                    enum:
+                      - "success"
+                      - "error"
+                  result:
+                    type: object
+                    properties:
+                      data:
+                        type: object
+                        items:
+                          $ref: '#/components/schemas/Product'
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Product not found
+        '500':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Something went wrong
+    options:
+      responses:
+        '200':
+          description: 200 response
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+          content: {}
+  '/products/products':
+    get:
+      description: Get all products
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code: 
+                    type: string
+                    enum:
+                      - "success"
+                      - "error"
+                  result:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                      
+        '500':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Internal server error
+    post: 
+      description: Create product
+      requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  description:
+                    type: string
+                  price:
+                    type: number
+                  title:
+                   type: string
+                required: 
+                  - price
+                  - title
+                  - description
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Bad request
+        '500':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Internal server error
+    options:
+      responses:
+        '200':
+          description: 200 response
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+          content: {}
+components: 
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        count:
+          type: integer
+        description:
+          type: string
+        price:
+          type: number
+        title:
+          type: string
+        imageName:
+          type: string
+      required: 
+        - price
+        - title
+        - description
+        - count
